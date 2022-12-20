@@ -8,3 +8,11 @@ buttons = InlineKeyboardMarkup(
         ]
     ]
 )
+
+report_admin_button = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [
+            InlineKeyboardButton(text='Доложить информацию администратору🫡', callback_data='report_admin'),
+        ]
+    ]
+)

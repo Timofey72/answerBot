@@ -1,11 +1,18 @@
-from aiogram import Dispatcher
+from aiogram import Dispatcher, Bot
 from aiogram.dispatcher import FSMContext
 from aiogram.types import Message, CallbackQuery
 from aiogram.utils.markdown import hcode
 
-from tgbot.keyboards.inline import buttons, admin
+from tgbot.config import load_config
+from tgbot.keyboards.inline import buttons, report_admin_button
 from tgbot.misc.states import AnswerState
 from tgbot.services.parser import create_url_and_start_parser
+
+err = {
+    'url': '',
+    'error': '',
+    'user_id': ''
+}
 
 
 async def user_start(message: Message):
@@ -41,7 +48,6 @@ async def solve_test(call: CallbackQuery):
 
 async def parse_data(message: Message, state: FSMContext):
     try:
-        a = 3 / 0
         url = message.text
         answers = create_url_and_start_parser(url)
         msg = ''
@@ -49,9 +55,38 @@ async def parse_data(message: Message, state: FSMContext):
             ans = answer[2].replace('[', '').replace(']', '')
             msg += f'<b>{answer[0]}</b>. {answer[1]}\n<b>Ответ</b>: {hcode(ans)}\n'
         await message.answer(msg)
-    except Exception:
-        await message.answer('Ошибка')
+    except Exception as ex:
+        err['url'] = message.text
+        err['error'] = str(ex)
+        err['user_id'] = message.from_user.id
+        msg = """
+⚠️ Произошла неизвестная ошибка ⚠
+        
+Проверьте введённые данные и попробуйте ещё раз❗
+Если ошибка не пропадет, то, пожалуйста, доложите
+информацию администратору по кнопке
+
+👇 Благодаря вам бот станет ещё лучше❤️
+"""
+        await message.answer(msg, reply_markup=report_admin_button)
     await state.finish()
+
+
+async def report_admin(call: CallbackQuery):
+    await call.message.answer(f'Спасибо❤')
+    await call.message.delete_reply_markup()
+
+    config = load_config(".env")
+    bot = Bot(token=config.tg_bot.token, parse_mode='HTML')
+    admin = config.tg_bot.admin_ids[0]
+
+    error_message = f"""
+Произошла ошибка:
+user_id: {err['user_id']}
+url: {err['url']}
+error: {err['error']}
+    """
+    await bot.send_message(admin, error_message)
 
 
 def register_start(dp: Dispatcher):
@@ -59,3 +94,4 @@ def register_start(dp: Dispatcher):
     dp.register_callback_query_handler(profile, text='profile')
     dp.register_callback_query_handler(solve_test, text='solve_test')
     dp.register_message_handler(parse_data, state=AnswerState.GetURL)
+    dp.register_callback_query_handler(report_admin, text='report_admin')
