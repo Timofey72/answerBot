@@ -2,11 +2,11 @@ import asyncio
 import logging
 
 from aiogram import Bot, Dispatcher
+from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
 from tgbot.config import load_config
 from tgbot.filters.admin import AdminFilter
 from tgbot.handlers.admin import register_admin
-from tgbot.handlers.echo import register_echo
 from tgbot.handlers.start import register_start
 from tgbot.middlewares.environment import EnvironmentMiddleware
 
@@ -25,8 +25,6 @@ def register_all_handlers(dp):
     register_admin(dp)
     register_start(dp)
 
-    register_echo(dp)
-
 
 async def main():
     logging.basicConfig(
@@ -37,7 +35,7 @@ async def main():
     config = load_config(".env")
 
     bot = Bot(token=config.tg_bot.token, parse_mode='HTML')
-    dp = Dispatcher(bot)
+    dp = Dispatcher(bot, storage=MemoryStorage())
 
     bot['config'] = config
 
