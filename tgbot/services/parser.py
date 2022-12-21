@@ -14,14 +14,21 @@ def get_content(url: str) -> list:
         response = s.get(url=url, headers=headers)
 
         soup = BeautifulSoup(response.text, 'lxml')
-        answers = soup.find('div', class_='block-tasks').find_all('div', class_='block-tasks_task')
+        blocks = soup.find('div', class_='block-tasks').find_all('div', class_='block-tasks_task')
 
-        lst = []
-        for id, answer in enumerate(answers):
-            question = answer.find('div', class_='block-tasks-question_text').find('p', id='quest').text
-            ans = answer.find('div', class_='block-tasks-answer_text').find('p', id='ans').text
-            lst.append([id + 1, question, ans])
-        return lst
+        questions_lst = []
+        answers_lst = []
+        for block in blocks:
+            question_title = block.find('vim-instruction').text
+            questions_lst.append(question_title)
+
+            ans_lst = []
+            for text in block.find_all('li'):
+                for ans in text.find_all('vim-select-item', correct='true'):
+                    ans_lst.append(ans.find('vim-select-item-title').text)
+            answers_lst.append(ans_lst)
+
+        return [questions_lst, answers_lst]
     except Exception:
         pass
 

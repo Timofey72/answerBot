@@ -32,7 +32,7 @@ async def user_start(message: Message):
 
 async def profile(call: CallbackQuery):
     message = f"""
-📋 Профиль
+ 📋 Профиль
 
 В процессе разработки👷🏻‍♂️
     """
@@ -41,22 +41,28 @@ async def profile(call: CallbackQuery):
 
 
 async def solve_test(call: CallbackQuery):
-    await call.message.answer('❗️Отправте ссылку на ваш тест!')
+    msg = """
+ ✍🏻 Решить тест
+
+❗️Отправьте ссылку на ваш тест!
+    """
+    await call.message.answer(msg)
     await call.answer()
     await AnswerState.first()
 
 
 async def parse_data(message: Message, state: FSMContext):
+    await message.answer('Решаем🧐')
+    url = message.text
     try:
-        url = message.text
-        answers = create_url_and_start_parser(url)
+        q_lst, a_lst = create_url_and_start_parser(url)
         msg = ''
-        for answer in answers:
-            ans = answer[2].replace('[', '').replace(']', '')
-            msg += f'<b>{answer[0]}</b>. {answer[1]}\n<b>Ответ</b>: {hcode(ans)}\n'
+        for id, question in enumerate(q_lst):
+            msg += f'<b>{id + 1}</b>. {question}\n<b>Ответ</b>: {hcode(", ".join(a_lst[id]))}\n'
+
         await message.answer(msg)
     except Exception as ex:
-        err['url'] = message.text
+        err['url'] = url
         err['error'] = str(ex)
         err['user_id'] = message.from_user.id
         msg = """
@@ -64,7 +70,7 @@ async def parse_data(message: Message, state: FSMContext):
         
 Проверьте введённые данные и попробуйте ещё раз❗
 Если ошибка не пропадет, то, пожалуйста, доложите
-информацию администратору по кнопке
+информацию администратору
 
 👇 Благодаря вам бот станет ещё лучше❤️
 """
@@ -73,7 +79,7 @@ async def parse_data(message: Message, state: FSMContext):
 
 
 async def report_admin(call: CallbackQuery):
-    await call.message.answer(f'Спасибо❤')
+    await call.answer(f'Спасибо❤')
     await call.message.delete_reply_markup()
 
     config = load_config(".env")
