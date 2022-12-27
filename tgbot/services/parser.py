@@ -19,13 +19,15 @@ def get_content(url: str) -> list:
         questions_lst = []
         answers_lst = []
         for block in blocks:
+            # Вопросы
             question_title = block.find('vim-instruction').text
             questions_lst.append(question_title)
 
-            ans_lst = []
-            for text in block.find_all('li'):
-                for ans in text.find_all('vim-select-item', correct='true'):
-                    ans_lst.append(ans.find('vim-select-item-title').text)
+            # Ответы
+            ans_lst = [i.text for i in block.find('vim-input-answers').find_all('vim-input-item')]
+            # for text in block.find_all('li'):
+            #     for ans in text.find_all('vim-select-item', correct='true'):
+            #         ans_lst.append(ans.find('vim-select-item-title').text)
             answers_lst.append(ans_lst)
 
         return [questions_lst, answers_lst]
